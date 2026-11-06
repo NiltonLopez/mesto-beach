@@ -1,0 +1,2 @@
+# Los scripts corren en contenedores Linux: con CRLF mueren con «bash\r: No such file or directory».
+*.sh text eol=lf

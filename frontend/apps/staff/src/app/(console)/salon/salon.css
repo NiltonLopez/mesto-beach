@@ -1,0 +1,595 @@
+/* ============================================================
+   Salón — consola táctil del mesero (vista /salon de la app staff).
+   SCOPEADO bajo `.salon-root` para no afectar el resto de la app staff.
+   Sistema de diseño Mesto Beach: TEMA CLARO, crema + dorado.
+   El dorado es joyería: hairlines, acentos y estados activos, nunca fondos grandes.
+   Tipos globales del staff: --font-display (Gilda Display 400) para nombres/títulos,
+   --font-ui (Barlow) para lo operativo.
+   ============================================================ */
+
+/* Terciario cálido del salón (#7A6A52); en Night se aclara. */
+:root { --salon-faint: 122 106 82; }
+html[data-venue="night"] { --salon-faint: 150 138 120; }
+
+.salon-root {
+  /* base crema (tokens Mesto Beach) */
+  --bg: rgb(var(--canvas));        /* canvas — fondo de la app (crema mate) */
+  --bg-2: rgb(var(--paper));      /* paper — superficie del drawer */
+  --surface: rgb(var(--paper));   /* paper — tarjetas / paneles */
+  --surface-2: rgb(var(--paper-2)); /* paper2 — superficie secundaria (crema) */
+  --surface-3: rgb(var(--arena)); /* arena — tint suave para rings */
+  --line: rgb(var(--hair) / 0.45);   /* hairline dorado */
+  --line-2: rgb(var(--hair) / 0.6);  /* hairline dorado marcado */
+
+  --text: rgb(var(--ink));  /* ink — texto / titulares */
+  --dim: rgb(var(--muted));   /* muted — texto secundario */
+  --faint: rgb(var(--salon-faint)); /* terciario cálido (legible en crema) */
+
+  /* oro — el acento dorado (antes ember naranja) */
+  --brass: rgb(var(--oro));        /* brand-500 / oro */
+  --brass-bright: rgb(var(--brand-700)); /* brand-700 — dorado legible para texto sobre claro */
+  --brass-deep: rgb(var(--brand-800));   /* brand-800 */
+  --brass-glow: rgb(var(--oro) / 0.2);
+  --grad-brass: linear-gradient(135deg, #b08a57 0%, #8f6a41 100%);
+
+  /* señales de estado — legibles en claro; los estados de negocio en dorado */
+  --ready: rgb(var(--brand-700)); /* "listo" = estado de negocio → dorado */
+  --ready-bg: rgb(var(--oro) / 0.1);
+  --call: #be123c;  /* rose-700 — alerta de llamado */
+  --call-bg: rgba(190, 18, 60, 0.08);
+  --pin: #b45309;   /* amber-700 — pide PIN */
+  --pin-bg: rgba(180, 83, 9, 0.1);
+  --eta: #43645d;   /* verde salvia — pregunta "¿cuándo sale?": informa, no alarma */
+  --eta-bg: rgba(67, 100, 93, 0.1);
+  --free: rgb(var(--salon-faint));  /* neutro cálido — mesa libre */
+
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 10px 30px -12px rgb(var(--sombra) / 0.18);
+  --shadow-lift: 0 22px 60px -22px rgb(var(--sombra) / 0.28);
+  --shadow-ember: 0 8px 20px -10px rgb(var(--oro) / 0.4);
+
+  /* base de página (antes en html/body) */
+  min-height: 100vh;
+  color: var(--text);
+  font-family: var(--font-ui), "Barlow", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  background:
+    radial-gradient(1100px 560px at 50% -12%, rgba(170, 132, 83, 0.06), transparent 60%),
+    radial-gradient(760px 520px at 100% 0%, rgba(170, 132, 83, 0.04), transparent 55%),
+    var(--bg);
+}
+
+/* Night: solo las señales de estado, calibradas en claro para fondo crema. */
+html[data-venue="night"] .salon-root {
+  --call: #fb7185;
+  --call-bg: rgba(251, 113, 133, 0.12);
+  --pin: #fbbf24;
+  --pin-bg: rgba(251, 191, 36, 0.12);
+  --eta: #8fb3a8;
+  --eta-bg: rgba(143, 179, 168, 0.12);
+}
+
+.salon-root * { box-sizing: border-box; }
+
+/* grano fino para dar un poco de profundidad a los rellenos planos */
+.salon-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.25;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+.salon-root button, .salon-root input, .salon-root select { font: inherit; color: inherit; }
+.salon-root button {
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.salon-root :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.salon-root .num { font-variant-numeric: tabular-nums; }
+/* Nombres y títulos: Gilda Display peso 400 (grande y ligero, nunca bold). */
+.salon-root .serif { font-family: var(--font-display), "Gilda Display", Georgia, serif; font-weight: 400; letter-spacing: normal; }
+
+/* ---------- shell ---------- */
+.salon-root .shell {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 16px 130px;
+}
+
+/* ---------- top bar ---------- */
+.salon-root .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap; /* en móvil estrecho las pastillas bajan a una segunda línea, no se aprietan */
+  gap: 14px;
+  padding: 18px 4px 16px;
+  margin-bottom: 8px;
+  background: linear-gradient(var(--bg) 60%, rgb(var(--canvas) / 0));
+}
+.salon-root .brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  margin-right: auto;
+}
+.salon-root .brand .mark {
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--brass-bright);
+  font-weight: 600;
+}
+.salon-root .brand .who {
+  font-family: var(--font-display), "Gilda Display", Georgia, serif;
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: normal;
+  margin-top: 6px;
+  color: var(--text);
+}
+.salon-root .brand .who small { color: var(--dim); font-weight: 500; font-size: 13px; letter-spacing: 0; }
+
+.salon-root .live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dim);
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.salon-root .live .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--brass);
+  box-shadow: 0 0 0 0 rgba(170, 132, 83, 0.5);
+  animation: sl-pulse 2s infinite;
+}
+.salon-root .live.off .dot { background: var(--faint); animation: none; box-shadow: none; }
+
+/* Pantalla completa (`<FullscreenButton unstyled className="fsbtn" />`): la misma pastilla que
+   `.live`, pero se pulsa. Encendida se viste de latón, como los `.chip[data-on="true"]`.
+   El componente no trae clases de Tailwind, así que todo lo pinta esta regla. */
+.salon-root .fsbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dim);
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  transition: 0.18s;
+}
+.salon-root .fsbtn:hover { color: var(--text); border-color: var(--line-2); background: var(--surface-2); }
+.salon-root .fsbtn:active { transform: scale(0.96); }
+.salon-root .fsbtn[data-on="true"] {
+  background: var(--grad-brass);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--shadow-ember);
+}
+
+.salon-root .iconbtn {
+  display: grid; place-items: center;
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--dim);
+  font-size: 18px;
+  transition: 0.18s;
+}
+.salon-root .iconbtn:hover { color: var(--text); border-color: var(--line-2); background: var(--surface-2); }
+.salon-root .iconbtn:active { transform: scale(0.94); }
+
+/* ---------- section heads ---------- */
+.salon-root .sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 28px 4px 14px;
+}
+.salon-root .sec-head h2 {
+  font-family: var(--font-display), "Gilda Display", Georgia, serif;
+  font-weight: 400;
+  font-size: 22px;
+  margin: 0;
+  letter-spacing: normal;
+  color: var(--text);
+}
+.salon-root .sec-head .count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--faint);
+  margin-left: auto;
+}
+.salon-root .sec-head .pip {
+  font-size: 11px; font-weight: 700;
+  color: #fff;
+  background: var(--grad-brass);
+  border-radius: 999px;
+  padding: 3px 10px;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow-ember);
+}
+
+/* ---------- priority (Now) rail ---------- */
+.salon-root .now-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+}
+.salon-root .now {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 17px;
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line);
+  overflow: hidden;
+  animation: sl-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+.salon-root .now::before {
+  content: "";
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--accent, var(--brass));
+}
+.salon-root .now.glow { box-shadow: 0 0 0 1px var(--accent-line, transparent), 0 16px 40px -24px var(--accent, rgba(78,58,38,.4)); }
+.salon-root .now .ring {
+  flex: 0 0 auto;
+  width: 54px; height: 54px;
+  border-radius: 15px;
+  display: grid; place-items: center;
+  font-size: 23px;
+  color: var(--accent, var(--brass));
+  background: var(--accent-bg, var(--surface-3));
+  border: 1px solid var(--accent-line, var(--line));
+}
+.salon-root .now .body { min-width: 0; flex: 1; }
+.salon-root .now .body .t { display: flex; align-items: center; gap: 8px; }
+.salon-root .now .body .table {
+  font-family: var(--font-display), "Gilda Display", Georgia, serif;
+  font-weight: 400;
+  font-size: 21px;
+  letter-spacing: normal;
+  color: var(--text);
+}
+.salon-root .now .body .kind {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent, var(--brass));
+}
+.salon-root .now .body .desc {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: var(--dim);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.salon-root .now .act {
+  flex: 0 0 auto;
+  border: 0; border-radius: 13px;
+  padding: 13px 18px;
+  font-weight: 700; font-size: 15px;
+  background: var(--grad-brass);
+  color: #fff;
+  box-shadow: var(--shadow-ember);
+  transition: 0.15s;
+  white-space: nowrap;
+  min-height: 48px;
+}
+.salon-root .now .act:hover { filter: brightness(1.05); }
+.salon-root .now .act:active { transform: scale(0.96); }
+.salon-root .now .act:disabled { opacity: 0.55; box-shadow: none; }
+
+.salon-root .now.ready { --accent: var(--ready); --accent-bg: var(--ready-bg); --accent-line: rgba(170,132,83,.3); }
+.salon-root .now.call  { --accent: var(--call);  --accent-bg: var(--call-bg);  --accent-line: rgba(190,18,60,.25); }
+.salon-root .now.pin   { --accent: var(--pin);   --accent-bg: var(--pin-bg);   --accent-line: rgba(180,83,9,.28); }
+/* La cuenta comparte el rojo del llamado: las dos reclaman a alguien en la mesa. */
+.salon-root .now.bill  { --accent: var(--call);  --accent-bg: var(--call-bg);  --accent-line: rgba(190,18,60,.25); }
+.salon-root .now.eta   { --accent: var(--eta);   --accent-bg: var(--eta-bg);   --accent-line: rgba(67,100,93,.25); }
+/* El aro del ETA NO respira: la pregunta por el plato no compite con lo urgente. */
+.salon-root .now.call .ring, .salon-root .now.bill .ring, .salon-root .now.pin .ring, .salon-root .now.ready .ring { animation: sl-breathe 2.4s ease-in-out infinite; }
+
+/* ---------- escalada por tiempo del aviso (misma cadencia que el PDA) ----------
+   El color de la tarjeta sigue diciendo QUÉ piden (llamado, PIN, cuenta, ETA); lo
+   que sube con el tiempo es la URGENCIA, y va aparte: un halo que late alrededor,
+   el aro respirando más deprisa y la etiqueta del tiempo cambiando de tono.
+
+   El halo se pinta en `::after` y NO en la propia tarjeta a propósito: `.now` ya
+   lleva `animation: sl-rise …` en forma corta, así que declarar ahí otra animación
+   borraría la de entrada —y con ella su `iteration-count`—, que es justo el fallo
+   que tuvo el panel del PDA antes de separarlas. */
+.salon-root .now { --urgencia: var(--accent, var(--brass)); }
+.salon-root .now[data-nivel="espera"] { --urgencia: var(--pin); }
+.salon-root .now[data-nivel="urgente"] { --urgencia: var(--call); }
+
+.salon-root .now[data-nivel]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: sl-halo 2.6s ease-in-out infinite;
+}
+.salon-root .now[data-nivel="espera"]::after { animation-duration: 1.5s; }
+.salon-root .now[data-nivel="urgente"]::after { animation-duration: 0.8s; }
+@keyframes sl-halo {
+  0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+  50% { box-shadow: inset 0 0 0 2px var(--urgencia); }
+}
+
+/* El aro acompaña: mismo gesto, más deprisa. Solo la duración —la forma corta
+   `animation` de arriba se quedaría sin `infinite` si la reescribiéramos. */
+.salon-root .now[data-nivel="espera"] .ring { animation-duration: 1.4s; }
+.salon-root .now[data-nivel="urgente"] .ring { animation-duration: 0.8s; }
+
+/* Etiqueta del tiempo que lleva esperando. */
+.salon-root .now .espera {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-left: auto;
+  font-size: 11px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--urgencia);
+  white-space: nowrap;
+}
+.salon-root .now .espera .punto {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--urgencia);
+  animation: sl-breathe 1.6s ease-in-out infinite;
+}
+.salon-root .now[data-nivel="espera"] .espera .punto { animation-duration: 1s; }
+.salon-root .now[data-nivel="urgente"] .espera .punto { animation-duration: 0.55s; }
+
+/* Pasados los tres minutos la urgencia manda sobre el motivo: la tarjeta entera
+   se tiñe y tiembla, para que se vea desde el otro lado del salón. */
+.salon-root .now[data-nivel="urgente"] {
+  border-color: var(--call);
+  background: linear-gradient(160deg, var(--call-bg), var(--surface));
+}
+.salon-root .now[data-nivel="urgente"]::before { background: var(--call); }
+.salon-root .now[data-nivel="urgente"] .ring { color: var(--call); border-color: rgba(190,18,60,.35); }
+
+/* ---------- floor grid ---------- */
+.salon-root .chips { display: flex; gap: 8px; margin: 0 4px 14px; flex-wrap: wrap; }
+.salon-root .chip {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--dim);
+  border-radius: 999px;
+  padding: 10px 17px;
+  font-size: 14px; font-weight: 600;
+  min-height: 44px;
+  transition: 0.15s;
+}
+.salon-root .chip:active { transform: scale(0.96); }
+.salon-root .chip[data-on="true"] { background: var(--grad-brass); color: #fff; border-color: transparent; box-shadow: var(--shadow-ember); }
+
+.salon-root .floor {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(164px, 1fr));
+}
+.salon-root .tcard {
+  position: relative;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 150px;
+  transition: 0.18s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: sl-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  overflow: hidden;
+}
+.salon-root .tcard:hover { transform: translateY(-3px); border-color: var(--line-2); box-shadow: var(--shadow); }
+.salon-root .tcard:active { transform: translateY(-1px) scale(0.99); }
+.salon-root .tcard.occupied { background: linear-gradient(160deg, var(--surface-2), var(--surface)); border-color: var(--line-2); }
+.salon-root .tcard.occupied::after {
+  content: ""; position: absolute; right: -40px; top: -40px;
+  width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, var(--brass-glow), transparent 70%);
+  pointer-events: none;
+}
+.salon-root .tcard.attn { border-color: var(--accent2, var(--call)); box-shadow: 0 0 0 1px var(--accent2, var(--call)), var(--shadow); }
+
+.salon-root .tcard .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.salon-root .tcard .top > .id { min-width: 0; }
+.salon-root .tcard .no {
+  font-family: var(--font-display), "Gilda Display", Georgia, serif;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.02;
+  letter-spacing: normal;
+  color: var(--text);
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.salon-root .tcard .zone { font-size: 11px; color: var(--faint); margin-top: 5px; font-weight: 500; }
+.salon-root .state {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase;
+  padding: 5px 9px; border-radius: 999px;
+  white-space: nowrap;
+}
+.salon-root .state .d { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }
+.salon-root .state.busy { color: var(--brass-bright); background: rgba(170,132,83,.12); }
+.salon-root .state.busy .d { background: var(--brass); }
+.salon-root .state.free { color: var(--free); background: var(--surface-2); }
+.salon-root .state.free .d { background: var(--faint); }
+.salon-root .state.call { color: var(--call); background: var(--call-bg); }
+.salon-root .state.call .d { background: var(--call); animation: sl-breathe 1.6s ease-in-out infinite; }
+.salon-root .state.pin { color: var(--pin); background: var(--pin-bg); }
+.salon-root .state.pin .d { background: var(--pin); animation: sl-breathe 1.6s ease-in-out infinite; }
+/* El punto del ETA tampoco parpadea: es un recordatorio, no una alarma. */
+.salon-root .state.eta { color: var(--eta); background: var(--eta-bg); }
+.salon-root .state.eta .d { background: var(--eta); }
+.salon-root .state.ready { color: var(--ready); background: var(--ready-bg); }
+.salon-root .state.ready .d { background: var(--ready); }
+
+.salon-root .tcard .stats {
+  margin-top: auto;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+.salon-root .tcard .meta { font-size: 12px; color: var(--dim); font-weight: 600; white-space: nowrap; }
+.salon-root .tcard .meta b { color: var(--pin); font-weight: 700; }
+.salon-root .tcard .bill {
+  font-family: var(--font-ui), "Barlow", system-ui, sans-serif; font-weight: 700; font-size: 18px;
+  letter-spacing: -0.01em;
+  color: var(--brass-bright); white-space: nowrap;
+}
+
+.salon-root .tcard .openhint {
+  margin-top: auto;
+  font-size: 13px; font-weight: 600;
+  color: var(--brass-bright);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+
+/* ---------- empty / loading ---------- */
+.salon-root .empty {
+  border: 1px dashed var(--line-2);
+  border-radius: var(--radius);
+  padding: 34px 20px;
+  text-align: center;
+  color: var(--faint);
+  background: rgba(170, 132, 83, 0.03);
+}
+.salon-root .empty .big { font-size: 28px; margin-bottom: 8px; color: var(--brass); }
+.salon-root .calm { display: flex; align-items: center; gap: 10px; color: var(--faint); font-size: 14px; padding: 4px 4px; }
+.salon-root .calm span { color: var(--brass); }
+
+.salon-root.loadwrap, .salon-root .loadwrap { min-height: 100vh; display: grid; place-items: center; }
+.salon-root .loadwrap .pulse, .salon-root .pulse { font-family: var(--font-display), "Gilda Display", Georgia, serif; font-weight: 400; font-size: 24px; color: var(--brass-bright); animation: sl-breathe 1.6s ease-in-out infinite; }
+
+/* ---------- drawer (table detail) ---------- */
+.salon-root .scrim {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(42, 33, 24, 0.4);
+  backdrop-filter: blur(3px);
+  animation: sl-fade 0.25s ease;
+}
+.salon-root .drawer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 41;
+  max-width: 560px; margin: 0 auto;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  border-bottom: 0;
+  border-radius: 26px 26px 0 0;
+  padding: 10px 20px calc(26px + env(safe-area-inset-bottom));
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: var(--shadow-lift);
+  animation: sl-slideup 0.34s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.salon-root .drawer::after {
+  content: ""; position: absolute; left: 24px; right: 24px; top: 0; height: 3px;
+  border-radius: 999px; background: var(--grad-brass); opacity: 0.85;
+}
+.salon-root .drawer .grab { width: 44px; height: 5px; border-radius: 999px; background: var(--line-2); margin: 8px auto 16px; }
+.salon-root .drawer .dhead { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
+.salon-root .drawer .dno { font-family: var(--font-display), "Gilda Display", Georgia, serif; font-size: 42px; font-weight: 400; line-height: 0.95; letter-spacing: normal; color: var(--text); }
+.salon-root .drawer .dsub { color: var(--faint); font-size: 13px; margin-top: 6px; }
+
+.salon-root .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+.salon-root .metric { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 13px; }
+.salon-root .metric .k { font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.salon-root .metric .v { font-family: var(--font-ui), "Barlow", system-ui, sans-serif; font-size: 24px; font-weight: 700; margin-top: 4px; letter-spacing: -0.01em; color: var(--text); }
+.salon-root .metric .v.money { color: var(--brass-bright); }
+.salon-root .metric .v.pend { color: var(--pin); }
+
+.salon-root .access {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.salon-root .tabs { display: inline-flex; gap: 4px; padding: 5px; background: var(--bg); border: 1px solid var(--line); border-radius: 13px; margin-bottom: 14px; }
+.salon-root .tab { border: 0; background: transparent; color: var(--dim); border-radius: 10px; padding: 11px 18px; font-size: 14px; font-weight: 600; transition: 0.15s; min-height: 44px; }
+.salon-root .tab[data-on="true"] { background: var(--grad-brass); color: #fff; box-shadow: var(--shadow-ember); }
+
+.salon-root .pin-show { display: grid; place-items: center; gap: 6px; padding: 14px 0; }
+.salon-root .pin-show .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--faint); font-weight: 600; }
+.salon-root .pin-show .digits {
+  font-family: var(--font-ui), "Barlow", system-ui, sans-serif; font-weight: 700;
+  font-size: 56px; letter-spacing: 0.12em;
+  color: var(--brass-bright);
+  text-shadow: 0 0 30px var(--brass-glow);
+}
+.salon-root .qr-show { display: grid; place-items: center; gap: 12px; }
+.salon-root .qr-frame { background: #fff; padding: 14px; border-radius: 16px; line-height: 0; border: 1px solid var(--line); }
+.salon-root .qr-show code { font-size: 11px; color: var(--faint); word-break: break-all; text-align: center; max-width: 100%; }
+
+/* ---------- buttons ---------- */
+.salon-root .btn {
+  border: 0; border-radius: 14px;
+  padding: 16px 20px;
+  font-weight: 700; font-size: 16px;
+  background: var(--grad-brass); color: #fff;
+  box-shadow: var(--shadow-ember);
+  transition: 0.16s; width: 100%;
+  min-height: 52px;
+}
+.salon-root .btn:hover { filter: brightness(1.05); }
+.salon-root .btn:active { transform: scale(0.98); }
+.salon-root .btn:disabled { opacity: 0.55; box-shadow: none; }
+.salon-root .btn.ghost { background: transparent; color: var(--dim); border: 1px solid var(--line-2); box-shadow: none; }
+.salon-root .btn.ghost:hover { color: var(--text); border-color: var(--brass); background: rgba(170,132,83,.08); filter: none; }
+.salon-root .btn.row { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+.salon-root .banner {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0 4px 12px;
+  padding: 13px 15px; border-radius: 13px;
+  background: var(--call-bg); border: 1px solid rgba(190,18,60,.25);
+  color: var(--call); font-size: 14px; font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- keyframes (prefijadas sl- para no colisionar) ---------- */
+@keyframes sl-pulse { 0% { box-shadow: 0 0 0 0 rgba(170,132,83,.5); } 70% { box-shadow: 0 0 0 8px rgba(170,132,83,0); } 100% { box-shadow: 0 0 0 0 rgba(170,132,83,0); } }
+@keyframes sl-breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes sl-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sl-slideup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sl-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  /* `::after` va incluido: ahí vive el halo de urgencia de los avisos, y sin
+     nombrarlo seguiría latiendo justo para quien ha pedido que no lo haga. */
+  .salon-root *, .salon-root *::before, .salon-root *::after {
+    animation: none !important; transition: none !important;
+  }
+  /* Quien pide menos movimiento se queda con el color, que es lo que informa. */
+  .salon-root .now[data-nivel]::after { box-shadow: inset 0 0 0 2px var(--urgencia); }
+}

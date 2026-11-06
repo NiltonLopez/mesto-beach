@@ -1,0 +1,76 @@
+/* Estilos del panel de avisos de mesa (PDA y Runner). Se scopean bajo `.avisos-root` (lo pone
+   AvisosPanel) para no tocar los demás módulos. Aquí solo vive lo que Tailwind no expresa
+   bien: una animación cuya intensidad sube con el tiempo. */
+
+.avisos-root .aviso {
+  --aviso: rgb(170 132 83); /* oro de marca: el aviso recién llegado */
+  --aviso-tenue: rgba(170, 132, 83, 0.1);
+  position: relative;
+  animation: pda-latido 2.6s ease-in-out infinite;
+}
+
+/* Al minuto sin atender sube el tono y el latido se acelera. */
+.avisos-root .aviso[data-nivel="espera"] {
+  --aviso: rgb(202 138 4);
+  --aviso-tenue: rgba(202, 138, 4, 0.13);
+  animation-duration: 1.5s;
+}
+
+/* A los tres minutos ya no es un aviso: es una queja esperando a ocurrir. */
+.avisos-root .aviso[data-nivel="urgente"] {
+  --aviso: rgb(220 38 38);
+  --aviso-tenue: rgba(220, 38, 38, 0.16);
+  animation-duration: 0.8s;
+}
+
+/* El latido crece con el nivel: el halo del urgente llega el triple de lejos
+   que el del recién llegado, así que se distingue de reojo y sin leer. */
+@keyframes pda-latido {
+  0%, 100% { box-shadow: 0 0 0 0 var(--aviso-tenue); }
+  50% { box-shadow: 0 0 0 6px var(--aviso-tenue); }
+}
+.avisos-root .aviso[data-nivel="espera"] {
+  animation-name: pda-latido-espera;
+}
+@keyframes pda-latido-espera {
+  0%, 100% { box-shadow: 0 0 0 0 var(--aviso-tenue); }
+  50% { box-shadow: 0 0 0 10px var(--aviso-tenue); }
+}
+.avisos-root .aviso[data-nivel="urgente"] {
+  animation-name: pda-latido-urgente;
+}
+@keyframes pda-latido-urgente {
+  0%, 100% { box-shadow: 0 0 0 0 var(--aviso-tenue); transform: translateX(0); }
+  25% { transform: translateX(-1.5px); }
+  50% { box-shadow: 0 0 0 16px var(--aviso-tenue); transform: translateX(1.5px); }
+  75% { transform: translateX(-1px); }
+}
+
+/* El punto late siempre, y más rápido cuanto más urgente. */
+.avisos-root .aviso .punto { animation: pda-punto 1.6s ease-in-out infinite; }
+.avisos-root .aviso[data-nivel="espera"] .punto { animation-duration: 1s; }
+.avisos-root .aviso[data-nivel="urgente"] .punto { animation-duration: 0.55s; }
+@keyframes pda-punto {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.82); }
+}
+
+/* La entrada va en un envoltorio aparte, NO en la propia tarjeta: la forma corta
+   `animation` reemplaza la declaración entera, así que puesta encima del latido le
+   dejaba `iteration-count: 1` y el aviso latía una sola vez —o ninguna, en el
+   recién llegado—. Justo lo contrario de lo que se busca. */
+.avisos-root .aviso-entra { animation: pda-entra 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+@keyframes pda-entra {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Quien pide menos movimiento se queda con el color, que es lo que informa. */
+@media (prefers-reduced-motion: reduce) {
+  .avisos-root .aviso,
+  .avisos-root .aviso .punto,
+  .avisos-root .aviso-entra {
+    animation: none !important;
+  }
+  .avisos-root .aviso { box-shadow: 0 0 0 3px var(--aviso-tenue); }
+}

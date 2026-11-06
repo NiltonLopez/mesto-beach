@@ -1,0 +1,72 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "menu",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-C",
+        "frontend",
+        "--filter",
+        "@mestobeach/menu",
+        "dev"
+      ],
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "staff",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-C",
+        "frontend",
+        "--filter",
+        "@mestobeach/staff",
+        "dev"
+      ],
+      "port": 3001
+    },
+    {
+      "name": "admin",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-C",
+        "frontend",
+        "--filter",
+        "@mestobeach/admin",
+        "dev"
+      ],
+      "port": 3003,
+      "autoPort": false
+    },
+    {
+      "name": "backend-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "backend/src/MestoBeach.API",
+        "--launch-profile",
+        "http"
+      ],
+      "port": 5011
+    },
+    {
+      "name": "staff-e2e",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-C",
+        "frontend/apps/staff",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "3009"
+      ],
+      "port": 3009,
+      "env": {
+        "NEXT_PUBLIC_API_URL": "http://localhost:5099"
+      }
+    }
+  ]
+}

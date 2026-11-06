@@ -1,0 +1,113 @@
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Editors ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Secrets / env ─────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ── Build output ──────────────────────────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# ── Visual Studio ─────────────────────────────────────────────────────────────
+.vs/
+*.user
+*.suo
+*.userosscache
+*.userprefs
+*.sln.docstates
+
+# ── NuGet ─────────────────────────────────────────────────────────────────────
+*.nupkg
+*.snupkg
+.nuget/
+# Ancla a la raíz: solo la carpeta de restore de NuGet, NO frontend/packages/ (workspaces pnpm)
+/packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ── dotnet tools ──────────────────────────────────────────────────────────────
+.dotnet/
+.tool-manifest
+
+# ── Test results ──────────────────────────────────────────────────────────────
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+BenchmarkDotNet.Artifacts/
+
+# ── Secrets / config overrides ────────────────────────────────────────────────
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.Local.json
+*.pfx
+*.p12
+*.pem
+secrets.json
+
+# ── Rider ─────────────────────────────────────────────────────────────────────
+.idea/
+*.sln.iml
+
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Next.js ───────────────────────────────────────────────────────────────────
+.next/
+out/
+build/
+
+# ── Turborepo ─────────────────────────────────────────────────────────────────
+.turbo/
+
+# ── TypeScript ────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+dist/
+*.d.ts.map
+
+# ── Env / secrets ─────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# ── Vercel ────────────────────────────────────────────────────────────────────
+.vercel/
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+.cache/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# Clave JWT local de desarrollo (la genera DevJwtKeys)
+.dev-keys/
+*.pem

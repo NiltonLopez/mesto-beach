@@ -1,0 +1,279 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Sistema de diseño Mesto Beach (mock plano-sala) ───────────────────────────
+   Tokens por CANAL (r g b) para soportar opacidad en Tailwind (bg-oro/60).
+   Tema claro comprometido: el sistema se pintó como el plano —crema + dorado—.
+   El dorado es joyería: hairlines, acentos y estados activos, nunca fondos grandes. */
+:root {
+  --canvas: 244 239 231; /* #F4EFE7 crema mate — fondo de la app */
+  --paper: 255 255 255; /* tarjetas / paneles (papel) */
+  --paper-2: 248 245 240; /* #F8F5F0 superficie secundaria */
+  --ink: 42 33 24; /* #2A2118 texto/titulares (tinta cálida) */
+  --muted: 107 93 75; /* #6B5D4B texto secundario */
+  --hair: 170 132 83; /* dorado para hairlines (se usa con alfa) */
+  --oro: 170 132 83; /* #AA8453 acento */
+  --arena: 237 227 210; /* #EDE3D2 arena de la playa */
+  --piedra: 237 230 219; /* #EDE6DB muros del salón */
+  --sombra: 78 58 38; /* #4E3A26 sombra cálida (con alfa) */
+  /* Escala brand-* como canal (tailwind.config: token("--brand-N")). En Night se invierte. */
+  --brand-50: 250 247 242;
+  --brand-100: 242 234 217;
+  --brand-200: 229 213 181;
+  --brand-300: 212 186 139;
+  --brand-400: 192 158 105;
+  --brand-500: 170 132 83;
+  --brand-600: 143 106 65;
+  --brand-700: 116 84 52;
+  --brand-800: 95 69 44;
+  --brand-900: 78 58 38;
+  /* Terracota del fuego (KDS). */
+  --fuego-500: 194 79 41; /* #C24F29 */
+  --fuego-600: 168 68 31; /* #A8441F */
+  --fuego-700: 140 56 24; /* #8C3818 */
+  /* Paleta de estaciones del KDS (lib/kds.ts). */
+  --est-1: 170 132 83; /* #AA8453 */
+  --est-2: 181 84 58; /* #B5543A */
+  --est-3: 94 122 107; /* #5E7A6B */
+  --est-4: 74 109 140; /* #4A6D8C */
+  /* Colores propios del plano a escala (ScaledFloorMap). */
+  --paper-3: 241 238 235; /* #F1EEEB suelo del salón */
+  --map-ink: 34 34 34; /* #222222 */
+  --map-sec: 102 102 102; /* #666666 */
+  --occ-ink: 138 103 47; /* #8A672F código de mesa ocupada */
+}
+
+/* ── Tema Night (ADR-039 / PRD-019 RT-1912) ────────────────────────────────
+   <html data-venue="night"> redefine los MISMOS tokens: ningún componente cambia, solo lo
+   que resuelven. El dorado #AA8453 es el único color que no se mueve. */
+html[data-venue="night"] {
+  color-scheme: dark;
+  --canvas: 22 22 22; /* #161616 */
+  --paper: 30 28 26; /* #1E1C1A */
+  --paper-2: 38 35 32; /* #262320 */
+  --ink: 244 236 226; /* #F4ECE2 */
+  --muted: 181 168 150; /* #B5A896 */
+  --hair: 170 132 83;
+  --oro: 170 132 83; /* #AA8453 */
+  --arena: 44 40 34; /* #2C2822 */
+  --piedra: 50 45 38; /* #322D26 */
+  --sombra: 0 0 0;
+  --brand-50: 36 29 21;
+  --brand-100: 52 41 29;
+  --brand-200: 78 62 42;
+  --brand-300: 110 88 59;
+  --brand-400: 140 110 71;
+  --brand-500: 170 132 83;
+  --brand-600: 192 158 105;
+  --brand-700: 212 186 139;
+  --brand-800: 229 213 181;
+  --brand-900: 242 234 217;
+  --fuego-500: 194 79 41;
+  --fuego-600: 214 98 60; /* hover/activo aclaran sobre fondo oscuro */
+  --fuego-700: 230 120 80;
+  --est-1: 170 132 83;
+  --est-2: 214 120 90;
+  --est-3: 130 170 150;
+  --est-4: 120 160 200;
+  --paper-3: 34 32 29;
+  --map-ink: 244 236 226;
+  --map-sec: 181 168 150;
+  --occ-ink: 212 178 122;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+  }
+  /* Foco visible y on-brand en todo control interactivo. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid rgb(var(--oro));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Firma visual: hairline dorado de 1px. */
+  .hairline {
+    @apply h-px w-full border-0 bg-oro/45;
+  }
+
+  /* ── Superficies ──────────────────────────────────────────────────── */
+  .card {
+    @apply rounded-2xl border border-hair/50 bg-paper shadow-warm;
+  }
+  .paper-panel {
+    @apply rounded-2xl border border-hair/40 bg-paper;
+  }
+
+  /* ── Botones ──────────────────────────────────────────────────────── */
+  .btn-primary {
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 active:scale-95 active:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-xl border border-hair/60 bg-paper px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-paper2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* ── Campos ───────────────────────────────────────────────────────── */
+  .input {
+    @apply w-full rounded-xl border border-hair/55 bg-paper px-4 py-3 text-sm text-ink outline-none placeholder:text-muted/60 focus:border-oro focus:ring-2 focus:ring-oro/20;
+  }
+
+  /* Etiqueta/chip: font-medium con tracking sutil, nunca bold gritón. */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-hair/50 bg-paper px-2.5 py-0.5 text-xs font-medium tracking-[0.03em] text-muted;
+  }
+
+  /* ── Caja (touch-first) — mismas clases, estética clara ───────────── */
+  .cd-panel {
+    @apply rounded-2xl border border-hair/50 bg-paper shadow-warm-sm;
+  }
+  .cd-btn {
+    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition
+           active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .cd-primary {
+    @apply bg-brand-500 text-white shadow-warm-sm hover:bg-brand-600;
+  }
+  .cd-ghost {
+    @apply border border-hair/55 bg-paper text-ink hover:bg-paper2;
+  }
+  .cd-danger {
+    @apply border border-rose-400/40 bg-rose-500/10 text-rose-600 hover:bg-rose-500/15;
+  }
+  .cd-chip {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-full border border-hair/50
+           bg-paper px-4 text-sm font-semibold text-ink transition active:scale-95 hover:bg-paper2
+           disabled:cursor-not-allowed disabled:opacity-50;
+    touch-action: manipulation;
+  }
+  .cd-seg {
+    @apply min-h-[52px] flex-1 rounded-xl px-3 text-sm font-bold transition active:scale-95;
+    touch-action: manipulation;
+  }
+  .cd-seg-on {
+    @apply bg-brand-500 text-white shadow-warm-sm;
+  }
+  .cd-seg-off {
+    @apply bg-paper2 text-muted hover:bg-paper;
+  }
+  .cd-field {
+    @apply w-full rounded-xl border border-hair/55 bg-paper px-4 py-3 text-base text-ink outline-none
+           placeholder:text-muted/60 focus:border-oro focus:ring-2 focus:ring-oro/20;
+    min-height: 52px;
+  }
+  .cd-money {
+    @apply font-extrabold tracking-tight;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ── Transición de modo «agujero negro» (PRD-019 RT-1915, ADR-039) ───────────────────────────
+ * Tres fases, mismas en las tres apps (gobernadas por runTransition en lib/venue.tsx):
+ *  1. collapse (900 ms)   el contenido cae en espiral hacia el centro mientras el horizonte de
+ *     sucesos (velo negro con anillo de fotones dorado) se cierra desde los bordes. Ambos usan la
+ *     misma curva: el borde del contenido viaja pegado al anillo.
+ *  2. singularity (≥1 s)  negro, un punto dorado que late y la marca del modo de destino.
+ *  3. emerge (900 ms)     el horizonte se reabre y el local nuevo sale girando al revés, con
+ *     una ráfaga de partículas. Hacia Restaurante el anillo es luz de arena (amanecer).
+ * El radio del hueco es una propiedad registrada (@property): sin soporte, el velo hace fundido. */
+@property --venue-r {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+/* Solo transform y opacity: se componen en la GPU. Un blur sobre la pantalla entera a tamaño
+   completo costaba demasiado y la caída iba a tirones (la emersión lo aguanta porque arranca pequeña). */
+@keyframes venue-collapse {
+  0%   { transform: scale(1) rotate(0deg);      opacity: 1; }
+  80%  { opacity: 0.9; }
+  100% { transform: scale(0.02) rotate(-38deg); opacity: 0; }
+}
+@keyframes venue-emerge {
+  0%   { transform: scale(0.02) rotate(38deg);    filter: blur(6px) brightness(0.3) saturate(0.4); }
+  100% { transform: scale(1) rotate(0deg);        filter: blur(0) brightness(1) saturate(1); }
+}
+@keyframes venue-horizon-close { from { --venue-r: 115%; } to { --venue-r: 0%; } }
+@keyframes venue-horizon-open  { from { --venue-r: 0%; }   to { --venue-r: 115%; } }
+@keyframes venue-veil-in  { from { opacity: 0; } 35% { opacity: 1; } to { opacity: 1; } }
+@keyframes venue-halo {
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 0 1.5px rgb(var(--venue-glow) / 0.95), 0 0 18px 4px rgb(var(--venue-glow) / 0.45); }
+  50%      { transform: scale(1.12); box-shadow: 0 0 0 2px rgb(var(--venue-glow) / 1),    0 0 34px 10px rgb(var(--venue-glow) / 0.65); }
+}
+@keyframes venue-disk { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes venue-word-in {
+  from { opacity: 0; letter-spacing: 0.5em; filter: blur(6px); }
+  to   { opacity: 1; letter-spacing: 0.16em; filter: blur(0); }
+}
+@keyframes venue-word-out { from { opacity: 1; } to { opacity: 0; transform: translateX(-50%) scale(1.08); } }
+@keyframes venue-burst {
+  from { transform: translate(-50%, -50%) rotate(var(--venue-angle)) translateX(0) scale(1); opacity: 1; }
+  to   { transform: translate(-50%, -50%) rotate(calc(var(--venue-angle) + 40deg)) translateX(var(--venue-dist)) scale(0.2); opacity: 0; }
+}
+@keyframes venue-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes venue-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+
+/* El contenido real del local (#venue-root). Origen en el centro de la ventana, no del documento. */
+.venue-collapse { animation: venue-collapse 900ms cubic-bezier(0.5, 0, 0.75, 0) forwards; transform-origin: 50% 50vh; will-change: transform, opacity; }
+.venue-hold     { transform: scale(0.02) rotate(-38deg); transform-origin: 50% 50vh; opacity: 0; }
+.venue-emerge   { animation: venue-emerge 900ms cubic-bezier(0.15, 0.65, 0.3, 1) forwards; transform-origin: 50% 50vh; will-change: transform, filter; }
+
+.venue-overlay {
+  --venue-glow: 170 132 83; /* oro */
+  position: fixed; inset: 0; z-index: 3000; pointer-events: all; overflow: hidden;
+  background: radial-gradient(circle farthest-corner at 50% 50%,
+    transparent var(--venue-r),
+    rgb(var(--venue-glow) / 0.85) calc(var(--venue-r) + 0.6%),
+    rgb(var(--venue-glow) / 0.25) calc(var(--venue-r) + 3%),
+    #050505 calc(var(--venue-r) + 9%));
+}
+.venue-overlay[data-to="restaurant"] { --venue-glow: 244 226 196; /* arena al amanecer */ }
+.venue-overlay[data-phase="collapse"]    { animation: venue-horizon-close 900ms cubic-bezier(0.5, 0, 0.75, 0) forwards, venue-veil-in 900ms linear forwards; }
+.venue-overlay[data-phase="singularity"] { --venue-r: 0%; }
+.venue-overlay[data-phase="emerge"]      { animation: venue-horizon-open 900ms cubic-bezier(0.15, 0.65, 0.3, 1) forwards; }
+
+/* Disco de acreción: un anillo cónico que gira alrededor de la singularidad. */
+.venue-disk {
+  position: absolute; left: 50%; top: 50%; width: 120px; height: 120px; border-radius: 9999px;
+  background: conic-gradient(from 0deg, transparent, rgb(var(--venue-glow) / 0.5), transparent 35%, rgb(var(--venue-glow) / 0.25) 60%, transparent 80%);
+  -webkit-mask: radial-gradient(circle, transparent 38%, #000 40%, #000 52%, transparent 70%);
+          mask: radial-gradient(circle, transparent 38%, #000 40%, #000 52%, transparent 70%);
+  filter: blur(2px);
+  animation: venue-disk 1.4s linear infinite, venue-fade-in 400ms ease-out;
+  transform: translate(-50%, -50%);
+}
+/* La singularidad: un núcleo negro con su anillo de fotones (un agujero negro no brilla por dentro). */
+.venue-dot {
+  position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+  border-radius: 9999px; background: #000; animation: venue-halo 1.4s ease-in-out infinite;
+}
+.venue-word {
+  position: absolute; left: 50%; top: calc(50% + 84px); transform: translateX(-50%);
+  white-space: nowrap; color: rgb(var(--venue-glow));
+  font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.16em;
+  animation: venue-word-in 700ms 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.venue-overlay[data-phase="emerge"] .venue-disk,
+.venue-overlay[data-phase="emerge"] .venue-dot { animation: venue-fade-out 260ms ease-in forwards; }
+.venue-overlay[data-phase="emerge"] .venue-word { animation: venue-word-out 350ms ease-in forwards; }
+.venue-particle {
+  position: absolute; left: 50%; top: 50%; width: var(--venue-size); height: var(--venue-size); border-radius: 9999px;
+  background: rgb(var(--venue-glow)); box-shadow: 0 0 8px 1px rgb(var(--venue-glow) / 0.7);
+  animation: venue-burst var(--venue-dur) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Movimiento reducido: fundido de 200 ms (100 + 100), sin giro, escala, marca ni partículas. */
+@media (prefers-reduced-motion: reduce) {
+  .venue-collapse { animation: venue-fade-out 100ms linear forwards; transform: none; }
+  .venue-hold     { transform: none; opacity: 0; }
+  .venue-emerge   { animation: venue-fade-in 100ms linear forwards; transform: none; }
+  .venue-overlay  { background: transparent; animation: none !important; }
+  .venue-disk, .venue-dot, .venue-word, .venue-particle { display: none; }
+}

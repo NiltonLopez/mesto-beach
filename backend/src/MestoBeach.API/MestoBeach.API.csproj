@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Modules\Identity\MestoBeach.Identity.Infrastructure\MestoBeach.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Catalog\MestoBeach.Catalog.Infrastructure\MestoBeach.Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Sessions\MestoBeach.Sessions.Infrastructure\MestoBeach.Sessions.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Orders\MestoBeach.Orders.Infrastructure\MestoBeach.Orders.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Payments\MestoBeach.Payments.Infrastructure\MestoBeach.Payments.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Analytics\MestoBeach.Analytics.Infrastructure\MestoBeach.Analytics.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Notifications\MestoBeach.Notifications.Infrastructure\MestoBeach.Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="..\Shared\MestoBeach.Shared\MestoBeach.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.2" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

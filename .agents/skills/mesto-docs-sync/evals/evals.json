@@ -1,0 +1,23 @@
+{
+  "skill_name": "mesto-docs-sync",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Acabamos de terminar el módulo de Apariencia del menú (branding por tenant) y conectamos Azurite/Blob Storage para guardar el logo, la portada y las imágenes del catálogo. Deja la documentación al día con todo eso.",
+      "expected_output": "Inventario de la brecha; ARCHITECTURE.md con sección/nota de branding + Blob Storage (Azurite en §12/§5 Image Storage) y marcas *(implementado)*, ADR si aplica, §15 actualizado; PRD-004 actualizado (épica/RF de Branding, versión/fecha) a criterio; SDD-002 con los endpoints de branding y la dependencia de Blob Storage; cross-check final. Todo en español, sin inventar.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "documenta los ultimos cambios del proyecto que no esten en la arquitectura, saca o actualiza los PRDs que veas y organiza los SDDs",
+      "expected_output": "Fase 0 real: git log + grep de endpoints/esquemas/hubs/rutas contra los docs para encontrar lo no documentado; luego ARCHITECTURE/PRD/SDD actualizados según la brecha encontrada, con decisiones de criterio explicadas (PRD nuevo vs actualización). No reescribe lo ya vigente.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Revisa si los SDDs están alineados con los endpoints reales del backend y arregla lo que falte o esté desactualizado.",
+      "expected_output": "Enumera rutas reales de los controladores y las contrasta con los encabezados ### MÉTODO de cada SDD; agrega los endpoints faltantes con la plantilla completa (Objetivo/Request/Response/Validaciones/Reglas/Errores/Observabilidad/Casos) y corrige cabeceras (PRDs de referencia, Dependencias). Foco en SDDs, sin tocar PRDs salvo cross-reference.",
+      "files": []
+    }
+  ]
+}

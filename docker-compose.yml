@@ -1,0 +1,189 @@
+name: mestobeach
+
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mestobeach_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mestobeach
+      POSTGRES_PASSWORD: mestobeach_dev
+      POSTGRES_DB: mestobeach
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mestobeach -d mestobeach"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7-jammy
+    container_name: mestobeach_mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mestobeach
+      MONGO_INITDB_ROOT_PASSWORD: mestobeach_dev
+      MONGO_INITDB_DATABASE: mestobeach_catalog
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: mestobeach_redis
+    restart: unless-stopped
+    command: redis-server --requirepass mestobeach_dev --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "mestobeach_dev", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Local email catch-all for dev
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mestobeach_mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+
+  # Local Azure Blob Storage emulator (catalog images + menu branding)
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: mestobeach_azurite
+    restart: unless-stopped
+    command: "azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --location /data --skipApiVersionCheck --loose"
+    ports:
+      - "10000:10000"   # Blob
+    volumes:
+      - azurite_data:/data
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      # Explícito a propósito: sin `target`, Docker construye la ÚLTIMA etapa del
+      # Dockerfile, que es `initializer`. La API sería entonces el inicializador.
+      target: runtime
+    container_name: mestobeach_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=mestobeach;Username=mestobeach;Password=mestobeach_dev
+      ConnectionStrings__Redis: redis:6379,password=mestobeach_dev
+      ConnectionStrings__MongoDB: mongodb://mestobeach:mestobeach_dev@mongodb:27017/mestobeach_catalog?authSource=admin
+      BlobStorage__ConnectionString: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+      BlobStorage__BaseUrl: http://${MESTOBEACH_HOST:-localhost}:10000/devstoreaccount1/catalog-images
+      Email__Host: mailhog
+      Email__Port: "1025"
+      # Base de los enlaces que el backend imprime en un QR (QR dinámico de sesión).
+      Frontend__BaseUrl: http://${MESTOBEACH_HOST:-localhost}:3000
+      Frontend__AdminUrl: http://${MESTOBEACH_HOST:-localhost}:3003
+      # CORS: los índices 0..4 de appsettings.json cubren localhost. Estos se SUMAN
+      # para que un móvil en la red local (origen http://<IP>:3000) no sea rechazado.
+      Cors__AllowedOrigins__5: http://${MESTOBEACH_HOST:-localhost}:3000
+      Cors__AllowedOrigins__6: http://${MESTOBEACH_HOST:-localhost}:3001
+      Cors__AllowedOrigins__7: http://${MESTOBEACH_HOST:-localhost}:3003
+    ports:
+      - "5011:5011"
+
+  # Inicializador de un solo uso: migraciones + bootstrap + carta de demostración.
+  # Solo corre con el perfil "demo" (`docker compose --profile demo up -d`) y es
+  # idempotente, así que puede quedarse activado sin duplicar datos.
+  init:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: initializer
+    container_name: mestobeach_init
+    profiles: ["demo"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      MESTOBEACH_API_URL: http://api:5011
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: mestobeach
+      POSTGRES_PASSWORD: mestobeach_dev
+      POSTGRES_DB: mestobeach
+    volumes:
+      - ./scripts:/scripts:ro
+
+  menu:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        APP: menu
+        PORT: 3000
+        NEXT_PUBLIC_API_URL: http://${MESTOBEACH_HOST:-localhost}:5011
+    container_name: mestobeach_menu
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+  staff:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        APP: staff
+        PORT: 3001
+        NEXT_PUBLIC_API_URL: http://${MESTOBEACH_HOST:-localhost}:5011
+        NEXT_PUBLIC_MENU_URL: http://${MESTOBEACH_HOST:-localhost}:3000
+    container_name: mestobeach_staff
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3001:3001"
+
+  admin:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        APP: admin
+        PORT: 3003
+        NEXT_PUBLIC_API_URL: http://${MESTOBEACH_HOST:-localhost}:5011
+    container_name: mestobeach_admin
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3003:3003"
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  azurite_data:
